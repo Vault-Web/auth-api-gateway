@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.support.WebExchangeBindException;
@@ -92,10 +93,18 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(WebExchangeBindException.class)
   Mono<ResponseEntity<ErrorResponse>> handleValidation(
       WebExchangeBindException ex, ServerHttpRequest request) {
+    log.error(ex.getMessage(), ex);
     String message =
-        ex.getFieldErrors().stream()
-            .map(error -> error.getField() + ": " + error.getDefaultMessage())
+        ex.getAllErrors().stream()
+            .map(
+                error ->
+                    error instanceof FieldError fieldError
+                        ? fieldError.getField() + ": " + fieldError.getDefaultMessage()
+                        : error.getDefaultMessage())
             .collect(Collectors.joining(", "));
+    if (message.isBlank()) {
+      message = "Validation failed";
+    }
 
     return Mono.just(
         ResponseEntity.status(HttpStatus.BAD_REQUEST)

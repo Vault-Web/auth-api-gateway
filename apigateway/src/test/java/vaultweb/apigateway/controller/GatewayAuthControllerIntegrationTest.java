@@ -104,7 +104,19 @@ class GatewayAuthControllerIntegrationTest {
 
   @Test
   void register_withMissingName_isRejected() {
-    register("", "frank", "frank@example.com", VALID_PASSWORD).expectStatus().isBadRequest();
+    Map<String, String> bodyWithoutName = new HashMap<>();
+    bodyWithoutName.put("username", "frank");
+    bodyWithoutName.put("email", "frank@example.com");
+    bodyWithoutName.put("password", VALID_PASSWORD);
+
+    webTestClient
+        .post()
+        .uri("/auth/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(bodyWithoutName)
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
   }
 
   // ----- /auth/login -----
@@ -149,7 +161,14 @@ class GatewayAuthControllerIntegrationTest {
 
   @Test
   void login_withMissingPassword_isRejected() {
-    login("someone@example.com", "").expectStatus().isBadRequest();
+    webTestClient
+        .post()
+        .uri("/auth/login")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(Map.of("emailUsername", "someone@example.com"))
+        .exchange()
+        .expectStatus()
+        .isBadRequest();
   }
 
   // ----- /auth/refresh -----
