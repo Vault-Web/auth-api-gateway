@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.support.WebExchangeBindException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -76,6 +77,24 @@ public class GlobalExceptionHandler {
     String message =
         ex.getConstraintViolations().stream()
             .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+            .collect(Collectors.joining(", "));
+
+    return Mono.just(
+        ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(
+                new ErrorResponse(
+                    message,
+                    new Timestamp(System.currentTimeMillis()),
+                    request.getURI().getPath(),
+                    HttpStatus.BAD_REQUEST.toString())));
+  }
+
+  @ExceptionHandler(WebExchangeBindException.class)
+  Mono<ResponseEntity<ErrorResponse>> handleValidation(
+      WebExchangeBindException ex, ServerHttpRequest request) {
+    String message =
+        ex.getFieldErrors().stream()
+            .map(error -> error.getField() + ": " + error.getDefaultMessage())
             .collect(Collectors.joining(", "));
 
     return Mono.just(
