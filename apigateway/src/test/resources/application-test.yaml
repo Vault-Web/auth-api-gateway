@@ -1,0 +1,9 @@
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///auth_gateway_db?options=DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
