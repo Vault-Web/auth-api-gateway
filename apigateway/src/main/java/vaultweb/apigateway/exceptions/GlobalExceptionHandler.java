@@ -6,8 +6,10 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.support.WebExchangeBindException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -77,6 +79,32 @@ public class GlobalExceptionHandler {
         ex.getConstraintViolations().stream()
             .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
             .collect(Collectors.joining(", "));
+
+    return Mono.just(
+        ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(
+                new ErrorResponse(
+                    message,
+                    new Timestamp(System.currentTimeMillis()),
+                    request.getURI().getPath(),
+                    HttpStatus.BAD_REQUEST.toString())));
+  }
+
+  @ExceptionHandler(WebExchangeBindException.class)
+  Mono<ResponseEntity<ErrorResponse>> handleValidation(
+      WebExchangeBindException ex, ServerHttpRequest request) {
+    log.error(ex.getMessage(), ex);
+    String message =
+        ex.getAllErrors().stream()
+            .map(
+                error ->
+                    error instanceof FieldError fieldError
+                        ? fieldError.getField() + ": " + fieldError.getDefaultMessage()
+                        : error.getDefaultMessage())
+            .collect(Collectors.joining(", "));
+    if (message.isBlank()) {
+      message = "Validation failed";
+    }
 
     return Mono.just(
         ResponseEntity.status(HttpStatus.BAD_REQUEST)
