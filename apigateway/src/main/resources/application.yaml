@@ -2,12 +2,12 @@ spring:
   application:
     name: apigateway
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/auth_gateway_db
+    url: r2dbc:postgresql://localhost:5433/auth_gateway_db
     username: postgres
     password: password
   sql:
     init:
-      mode: never  # Use 'always' only in dev/test profiles; handle prod schema via migrations
+      mode: always  # Use 'always' only in dev/test profiles; handle prod schema via migrations
       platform: postgresql
 
 jwt:
