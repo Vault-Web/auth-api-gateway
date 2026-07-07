@@ -2,6 +2,7 @@ package vaultweb.apigateway.service.auth;
 
 import org.springframework.stereotype.Service;
 
+import vaultweb.apigateway.dto.request.ChangePasswordRequest;
 import vaultweb.apigateway.dto.request.LoginRequest;
 import vaultweb.apigateway.dto.request.UserRegistrationRequest;
 import vaultweb.apigateway.dto.response.AuthResponse;
@@ -102,6 +103,28 @@ public class AuthService {
                               .accessToken(accessToken)
                               .refreshToken(refreshToken.getToken())
                               .build());
+            });
+  }
+
+  public Mono<Void> changePassword(ChangePasswordRequest request) {
+    return securityContextUtil
+        .getAuthenticatedUsername()
+        .flatMap(username -> userRepository.findByUsername(username))
+        .switchIfEmpty(
+            Mono.error(
+                new DefaultException(
+                    "username from token has no registered user",
+                    DefaultExceptionLevels.AUTHENTICATION_EXCEPTION)))
+        .flatMap(
+            user -> {
+              if (!BcryptUtil.matches(request.oldPassword(), user.getPassword())) {
+                return Mono.error(
+                    new DefaultException(
+                        "Invalid current password",
+                        DefaultExceptionLevels.AUTHENTICATION_EXCEPTION));
+              }
+              user.setPassword(BcryptUtil.encode(request.newPassword()));
+              return userRepository.save(user).then();
             });
   }
 
