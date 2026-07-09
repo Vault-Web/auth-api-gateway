@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import vaultweb.apigateway.dto.request.ChangePasswordRequest;
 import vaultweb.apigateway.dto.request.LoginRequest;
 import vaultweb.apigateway.dto.request.UserRegistrationRequest;
 import vaultweb.apigateway.dto.response.AuthResponse;
@@ -70,8 +71,8 @@ public class GatewayAuthController {
   }
 
   @PostMapping("change-password")
-  public String changePassword() {
-    return "changePassword";
+  public Mono<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+    return authService.changePassword(request);
   }
 
   @PostMapping("/reset-password")
