@@ -143,8 +143,7 @@ public class AuthService {
               if (request.newUsername().equals(user.getUsername())) {
                 return Mono.error(
                     new DefaultException(
-                        "You didn't change anything",
-                        DefaultExceptionLevels.DEFAULT_EXCEPTION));
+                        "You didn't change anything", DefaultExceptionLevels.DEFAULT_EXCEPTION));
               }
 
               return userRepository

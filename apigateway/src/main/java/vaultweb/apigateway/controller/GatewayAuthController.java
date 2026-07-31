@@ -63,7 +63,7 @@ public class GatewayAuthController {
 
   @ResponseStatus(HttpStatus.OK)
   @PostMapping("change-username")
-  public Mono<Void> changeUsername(@Valid @RequestBody ChangeUsernameRequest request){
+  public Mono<Void> changeUsername(@Valid @RequestBody ChangeUsernameRequest request) {
     return authService.changeUsername(request);
   }
 
