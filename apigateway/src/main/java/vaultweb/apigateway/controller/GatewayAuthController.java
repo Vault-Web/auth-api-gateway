@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import vaultweb.apigateway.dto.request.ChangePasswordRequest;
+import vaultweb.apigateway.dto.request.ChangeUsernameRequest;
 import vaultweb.apigateway.dto.request.LoginRequest;
 import vaultweb.apigateway.dto.request.UserRegistrationRequest;
 import vaultweb.apigateway.dto.response.AuthResponse;
@@ -60,9 +61,10 @@ public class GatewayAuthController {
     return authService.logout();
   }
 
+  @ResponseStatus(HttpStatus.OK)
   @PostMapping("change-username")
-  public String changeUsername() {
-    return "changeUsername";
+  public Mono<Void> changeUsername(@Valid @RequestBody ChangeUsernameRequest request){
+    return authService.changeUsername(request);
   }
 
   @PostMapping("change-email")
@@ -70,6 +72,7 @@ public class GatewayAuthController {
     return "changeEmail";
   }
 
+  @ResponseStatus(HttpStatus.OK)
   @PostMapping("change-password")
   public Mono<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
     return authService.changePassword(request);
