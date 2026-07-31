@@ -3,6 +3,7 @@ package vaultweb.apigateway.service.auth;
 import org.springframework.stereotype.Service;
 
 import vaultweb.apigateway.dto.request.ChangePasswordRequest;
+import vaultweb.apigateway.dto.request.ChangeUsernameRequest;
 import vaultweb.apigateway.dto.request.LoginRequest;
 import vaultweb.apigateway.dto.request.UserRegistrationRequest;
 import vaultweb.apigateway.dto.response.AuthResponse;
@@ -125,6 +126,41 @@ public class AuthService {
               }
               user.setPassword(BcryptUtil.encode(request.newPassword()));
               return userRepository.save(user).then();
+            });
+  }
+
+  public Mono<Void> changeUsername(ChangeUsernameRequest request) {
+    return securityContextUtil
+        .getAuthenticatedUsername()
+        .flatMap(userRepository::findByUsername)
+        .switchIfEmpty(
+            Mono.error(
+                new DefaultException(
+                    "username from token has no registered user",
+                    DefaultExceptionLevels.AUTHENTICATION_EXCEPTION)))
+        .flatMap(
+            user -> {
+              if (request.newUsername().equals(user.getUsername())) {
+                return Mono.error(
+                    new DefaultException(
+                        "You didn't change anything", DefaultExceptionLevels.DEFAULT_EXCEPTION));
+              }
+
+              return userRepository
+                  .existsByUsername(request.newUsername())
+                  .flatMap(
+                      usernameExists -> {
+                        if (usernameExists) {
+                          return Mono.error(
+                              new DefaultException(
+                                  "User with username "
+                                      + request.newUsername()
+                                      + " already exists"));
+                        }
+
+                        user.setUsername(request.newUsername());
+                        return userRepository.save(user).then();
+                      });
             });
   }
 
