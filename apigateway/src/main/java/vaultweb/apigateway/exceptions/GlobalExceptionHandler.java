@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(JsonProcessingException.class)
   Mono<ResponseEntity<ErrorResponse>> handleJsonProcessing(
       JsonProcessingException ex, ServerHttpRequest request) {
-    log.error(ex.getMessage(), ex);
+    logFailure(request, ex);
     return Mono.just(
         ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(
@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(DefaultException.class)
   Mono<ResponseEntity<ErrorResponse>> handleDefaultException(
       DefaultException ex, ServerHttpRequest request) {
-    log.error(ex.getMessage(), ex);
+    logFailure(request, ex);
     HttpStatus status = mapExceptionLevelToHttpStatus(ex.getLevel());
     return Mono.just(
         ResponseEntity.status(status)
@@ -74,7 +74,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ConstraintViolationException.class)
   Mono<ResponseEntity<ErrorResponse>> handleConstraintViolation(
       ConstraintViolationException ex, ServerHttpRequest request) {
-    log.error(ex.getMessage(), ex);
+    logFailure(request, ex);
     String message =
         ex.getConstraintViolations().stream()
             .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
@@ -93,7 +93,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(WebExchangeBindException.class)
   Mono<ResponseEntity<ErrorResponse>> handleValidation(
       WebExchangeBindException ex, ServerHttpRequest request) {
-    log.error(ex.getMessage(), ex);
+    logFailure(request, ex);
     String message =
         ex.getAllErrors().stream()
             .map(
@@ -118,7 +118,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   Mono<ResponseEntity<ErrorResponse>> handleGeneric(Exception ex, ServerHttpRequest request) {
-    log.error(ex.getMessage(), ex);
+    logFailure(request, ex);
     return Mono.just(
         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(
@@ -130,4 +130,12 @@ public class GlobalExceptionHandler {
   }
 
   record ErrorResponse(String message, Timestamp timestamp, String path, String errorCode) {}
+
+  private void logFailure(ServerHttpRequest request, Exception ex) {
+    // Validation exceptions and refresh paths can contain credentials.
+    log.error(
+        "request failed requestId={} exceptionType={}",
+        request.getHeaders().getFirst("X-Request-Id"),
+        ex.getClass().getSimpleName());
+  }
 }

@@ -7,3 +7,6 @@ spring:
     init:
       mode: always
       schema-locations: classpath:schema.sql
+
+jwt:
+  secret: synthetic-gateway-test-signing-value-only-0123456789abcdef0123456789abcdef
